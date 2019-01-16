@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/ephaimport</path>
+    <page_callback>CRM_Ephaimport_Page_EphaImport</page_callback>
+    <title>EphaImport</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+    <item>
+        <path>civicrm/ephaimport-execute</path>
+        <page_callback>CRM_Ephaimport_Page_EphaImportExecute</page_callback>
+        <title>EphaImport - Execute</title>
+        <access_arguments>access CiviCRM</access_arguments>
+    </item>
+</menu>
