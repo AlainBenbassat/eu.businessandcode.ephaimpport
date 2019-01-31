@@ -6,10 +6,10 @@
  * The ExtensionUtil class provides small stubs for accessing resources of this
  * extension.
  */
-class CRM_Ephaimport_ExtensionUtil {
+class CRM_ephaimport_ExtensionUtil {
   const SHORT_NAME = "ephaimport";
-  const LONG_NAME = "eu.businessandcode.ephaimport";
-  const CLASS_PREFIX = "CRM_Ephaimport";
+  const LONG_NAME = "org.civicoop.ephaimport";
+  const CLASS_PREFIX = "CRM_ephaimport";
 
   /**
    * Translate a string using the extension's domain.
@@ -77,7 +77,7 @@ class CRM_Ephaimport_ExtensionUtil {
 
 }
 
-use CRM_Ephaimport_ExtensionUtil as E;
+use CRM_ephaimport_ExtensionUtil as E;
 
 /**
  * (Delegated) Implements hook_civicrm_config().
@@ -205,14 +205,14 @@ function _ephaimport_civix_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
 }
 
 /**
- * @return CRM_Ephaimport_Upgrader
+ * @return CRM_ephaimport_Upgrader
  */
 function _ephaimport_civix_upgrader() {
-  if (!file_exists(__DIR__ . '/CRM/Ephaimport/Upgrader.php')) {
+  if (!file_exists(__DIR__ . '/CRM/ephaimport/Upgrader.php')) {
     return NULL;
   }
   else {
-    return CRM_Ephaimport_Upgrader_Base::instance();
+    return CRM_ephaimport_Upgrader_Base::instance();
   }
 }
 
@@ -269,10 +269,10 @@ function _ephaimport_civix_civicrm_managed(&$entities) {
       if (empty($e['module'])) {
         $e['module'] = E::LONG_NAME;
       }
-      $entities[] = $e;
       if (empty($e['params']['version'])) {
         $e['params']['version'] = '3';
       }
+      $entities[] = $e;
     }
   }
 }
