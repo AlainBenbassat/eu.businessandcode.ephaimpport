@@ -93,6 +93,10 @@ class CRM_ephaimport_Helper {
     ";
     $dao = CRM_Core_DAO::executeQuery($sql);
     if ($dao->fetch()) {
+      if (self::onBlacklist($dao->email)) {
+        return TRUE;
+      }
+
       $params = [];
 
       // get the organization id (org will be created if it does not exist)
@@ -229,6 +233,27 @@ class CRM_ephaimport_Helper {
 
   public static function process_tmpepha_press_list_task(CRM_Queue_TaskContext $ctx, $id) {
     return TRUE;
+  }
+
+  public static function onBlacklist($email) {
+    $split = explode('@', $email);
+    $sql = "
+      select
+        count(*)
+      from
+        tmpepha_blacklist
+      where 
+        email_domain = %1
+    ";
+    $sqlParams = [
+      1 => ['@' . $split[1], 'String'],
+    ];
+    if (CRM_Core_DAO::singleValueQuery($sql, $sqlParams)) {
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    }
   }
 
 }
