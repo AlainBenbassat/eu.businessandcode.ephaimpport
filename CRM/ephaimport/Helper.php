@@ -154,16 +154,57 @@ class CRM_ephaimport_Helper {
       // create or update the contact
       $contact = civicrm_api3('Contact', 'create', $params);
 
-      // see if this contact registered for an event
-      if ($dao->AC17 == 'Y') {
-        self::registerPaticipant('AC 17', $contact['id']);
-      }
-      if ($dao->Event) {
-        self::registerPaticipant($dao->Event, $contact['id']);
+      // for new contacts:
+      if (!$cid) {
+        // see if this contact registered for an event
+        if ($dao->AC17 == 'Y') {
+          self::registerPaticipant('AC 17', $contact['id']);
+        }
+        if ($dao->Gamechangers == 'Y') {
+          self::registerPaticipant('Game changers', $contact['id']);
+        }
+        if ($dao->Event) {
+          self::registerPaticipant($dao->Event, $contact['id']);
+        }
+
+        // create the opt-in relationship
+        self::createActivity($contact['id'], 55, 'MailChimp opt-in', '', $dao->OPTIN_TIME);
+
+        // add note
+        if ($dao->NOTES) {
+          self::createNote($contact['id'], $dao->NOTES);
+        }
       }
     }
 
     return TRUE;
+  }
+
+  public static function createNote($contactID, $note) {
+    $params = [
+      'entity_table' => 'civicrm_contact',
+      'entity_id' => $contactID,
+      'note' => $note,
+      'modified_date' => '2019-01-01',
+      'subject' => 'Imported from MailChimp',
+    ];
+    civicrm_api3('Note', 'create', $params);
+  }
+
+  public static function createActivity($contactID, $activityID, $subject, $details, $date) {
+    // create an activity
+    $params = [
+      'activity_type_id' => $activityID,
+      'subject' => $subject,
+      'activity_date_time' => $date,
+      'is_test' => 0,
+      'status_id' => 2,
+      'priority_id' => 2,
+      'details' => $details,
+      'source_contact_id' => $contactID,
+      'target_contact_id' => $contactID,
+    ];
+    CRM_Activity_BAO_Activity::create($params);
   }
 
   public static function getOrCreateOrganization($organization, $country, $city, $overwriteAddress) {
@@ -197,17 +238,22 @@ class CRM_ephaimport_Helper {
     // get event id
     $eventID = CRM_Core_DAO::singleValueQuery("select id from civicrm_event where title = %1", [1 => [$event, 'String']]);
 
-    // make sure we don't have it yet
-    $n = CRM_Core_DAO::singleValueQuery("select count(*) from civicrm_participant where contact_id = $contactID and event_id = $eventID");
-    if ($n == 0) {
-      $params = [
-        'event_id' => $eventID,
-        'contact_id' => $contactID,
-        'role_id' => 1,
-        'status_id' => 2,
-        'register_date' => '2000-01-01 00:00',
-      ];
-      civicrm_api3('Participant', 'create', $params);
+    if ($eventID) {
+      // make sure we don't have it yet
+      $n = CRM_Core_DAO::singleValueQuery("select count(*) from civicrm_participant where contact_id = $contactID and event_id = $eventID");
+      if ($n == 0) {
+        $params = [
+          'event_id' => $eventID,
+          'contact_id' => $contactID,
+          'role_id' => 1,
+          'status_id' => 2,
+          'register_date' => '2000-01-01 00:00',
+        ];
+        civicrm_api3('Participant', 'create', $params);
+      }
+    }
+    else {
+      watchdog('alain', "cannot find event = $event");
     }
   }
 
