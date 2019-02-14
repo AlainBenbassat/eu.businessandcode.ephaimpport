@@ -358,7 +358,7 @@ class CRM_ephaimport_Helper {
       // add the contact to the press group
       civicrm_api3("GroupContact", 'create', [
         'contact_id' => $contact['id'],
-        'group_id' => 15,
+        'group_id' => 2,
       ]);
     }
 
