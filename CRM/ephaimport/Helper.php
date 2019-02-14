@@ -278,6 +278,90 @@ class CRM_ephaimport_Helper {
   }
 
   public static function process_tmpepha_press_list_task(CRM_Queue_TaskContext $ctx, $id) {
+    $params = [];
+
+    $sql = "
+      SELECT
+        *
+      FROM
+        tmpepha_press_list
+      WHERE
+        id = $id
+    ";
+    $dao = CRM_Core_DAO::executeQuery($sql);
+    if ($dao->fetch()) {
+      if (self::onBlacklist($dao->email)) {
+        return TRUE;
+      }
+
+      // check if the person exists via email lookup
+      $sqlSearch = "
+        select
+          max(c.id)
+        from
+          civicrm_contact c
+        inner join 
+          civicrm_email e on e.contact_id = c.id
+        where
+          c.contact_type = 'Individual'
+        and 
+          e.email = %1
+      ";
+      $cid = CRM_Core_DAO::singleValueQuery($sqlSearch, [1 => [$dao->email, 'String']]);
+      if ($cid) {
+        // existing contact!
+
+        $params['id'] = $cid;
+
+        // overwrite the first name (if we have one)
+        if ($dao->first_name) {
+          $params['first_name'] = $dao->first_name;
+        }
+
+        // overwrite the last name (if we have one)
+        if ($dao->last_name) {
+          $params['last_name'] = $dao->last_name;
+        }
+
+        if (count($params) > 1) {
+          // update the contact
+          $contact = civicrm_api3('Contact', 'create', $params);
+        }
+        else {
+          $contact = [];
+          $contact['id'] = $cid;
+        }
+      }
+      else {
+        // new contact!
+
+        if ($dao->first_name || $dao->last_name) {
+          $params['first_name'] = $dao->first_name;
+          $params['last_name'] = $dao->last_name;
+        }
+        else {
+          // fix contacts without name
+          $params['first_name'] = $dao->email;
+        }
+
+        $params['contact_type'] = 'Individual';
+        $params['source'] = 'ephaimport';
+        $params['api.email.create'] = [
+          'email' => $dao->email,
+          'location_Type_id' => 2,
+        ];
+
+        // create the contact
+        $contact = civicrm_api3('Contact', 'create', $params);
+      }
+
+      // add the contact to the press group
+      civicrm_api3("GroupContact", 'create', [
+        'contact_id' => $contact['id'],
+        'group_id' => 15,
+      ]);
+    }
+
     return TRUE;
   }
 
