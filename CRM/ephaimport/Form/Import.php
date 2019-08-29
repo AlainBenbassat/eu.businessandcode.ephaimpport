@@ -21,6 +21,7 @@ class CRM_ephaimport_Form_Import extends CRM_Core_Form {
     $maintenanceMenuOptions = [
       'delq' => 'Delete Queue (items: ~' . $this->queue->numberOfItems() . ')',
       'config' => 'Create Configuration',
+      'config_meps' => 'Create MEPs Configuration',
     ];
     $this->addRadio('maintenance', 'Maintenance:', $maintenanceMenuOptions, NULL, '<br>');
 
@@ -29,6 +30,7 @@ class CRM_ephaimport_Form_Import extends CRM_Core_Form {
       'tmpepha_org_list' => 'Import Organizations',
       'tmpepha_main_list' => 'Import Main List',
       'tmpepha_press_list' => 'Import Press List',
+      'tmpepha_import_meps' => 'Import MEPs',
     ];
     $this->addRadio('import', 'Import:', $importMenuOptions, NULL, '<br>');
 
@@ -51,8 +53,8 @@ class CRM_ephaimport_Form_Import extends CRM_Core_Form {
     if ($values['maintenance'] == 'delq') {
       $this->queue->deleteQueue();
     }
-    elseif ($values['maintenance'] == 'config') {
-
+    elseif ($values['maintenance'] == 'config_meps') {
+      CRM_ephaimport_Helper::createMepsConfig();
     }
     elseif ($values['import'] !== '') {
       // put items in the queue
