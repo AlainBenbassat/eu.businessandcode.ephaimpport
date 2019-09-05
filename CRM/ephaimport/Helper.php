@@ -82,7 +82,7 @@ class CRM_ephaimport_Helper {
       $result = civicrm_api3('Group', 'get', $params);
       if ($result['count'] == 0) {
         // create the group
-        civicrm_api3('Group', 'create', $params);
+        $result = civicrm_api3('Group', 'create', $params);
         $groupID = $result['id'];
       }
       else {
